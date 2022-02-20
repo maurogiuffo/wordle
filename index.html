@@ -13,10 +13,10 @@
 <div class="container">
   <h2>wordle</h2>
   <form class="form-inline" action="" method="POST">
-    <div class="form-group">
+    <div class="form-group" id="input">
       <label for="word" >Palabra</label>
-      <input type="text" name="word" id="word" class="form-control"  placeholder="Ingresa la palabra" required/>
-	   <button onclick="testWord()" type="button" class="btn btn-default">Probar</button>
+      <input type="text" name="word" id="wordText" class="form-control"  placeholder="Ingresa la palabra" required/>
+	   <button onclick="testWord()" type="button" class="btn btn-default" id="botonTest">Probar</button>
     </div>
 	<div>
         <table id="wordsTable"></table>
@@ -74,7 +74,7 @@
 
 	function testWord()
     {
-		var word = document.getElementById("word").value;
+		var word = document.getElementById("wordText").value;
 
         const data = {
             'route' : 'api/testword',
@@ -82,12 +82,11 @@
         };
 
        post(server,data).then((result)=>{
-        
-            var resultLabel = document.getElementById("resultLabel");
+            document.getElementById("wordText").value="";
+            document.getElementById("wordText").disabled = result.data.state == true;
+            document.getElementById("botonTest").disabled = result.data.state == true;
+            document.getElementById("resultLabel").innerHTML = result.data.message;
             fillTable(word,result.data.text);
-            //console.log(result.data.text);
-            //if(result.data.state == false)
-            resultLabel.innerHTML = result.data.message;
         });
     }
 
@@ -96,17 +95,13 @@
     {
         var table = document.getElementById("wordsTable");
         var row = table.insertRow(-1);
-
         for (let i = 0; i < result.length; i++) {
            var cell = row.insertCell(-1);
            cell.innerHTML = word[i];
            cell.className = "cell";
            cell.classList.add( "cell"+ result[i])
-           
-
         }
     }
-
 
     function post(url,data) {
         const request = new XMLHttpRequest()
