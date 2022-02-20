@@ -85,9 +85,11 @@
     window.addEventListener('load', (event) => {
          if(!localStorage.getItem('userId'))
             showLogin();
-         else 
-            showPlay();
+         else{
+            login();
+         } 
     });
+
 
     function showLogin(){
         document.getElementById("play").style.visibility = "hidden"; 
@@ -99,16 +101,21 @@
     }
 
     function login(){
-        var userid = document.getElementById("userid").value;
+        if(!localStorage.getItem('userId'))
+            var userid = document.getElementById("userid").value;
+        else 
+            var userid = localStorage.getItem('userId');
+
         const data = {
             'route' : 'api/login',
             'userid': userid
         };
 
        post(server,data).then((result)=>{
-            if( result.data.state == true){
+            if(result.data.state == true){
                 localStorage.setItem("userId",result.data.userid);
                 showPlay();
+                loadTestWords();
             }
         });
     }
@@ -127,20 +134,38 @@
             document.getElementById("wordText").disabled = result.data.state == true;
             document.getElementById("botonTest").disabled = result.data.state == true;
             document.getElementById("resultLabel").innerHTML = result.data.message;
-            fillTable(word,result.data.text);
+            loadTestWords();
+        });
+    }
+
+    function loadTestWords()
+    {
+        const data = {
+            'route' : 'api/gettestwords'
+        };
+
+  
+       post(server,data).then((result)=>{
+            fillTable(result.data);
         });
     }
 
 
-    function fillTable(word,result)
+    function fillTable(result)
     {
         var table = document.getElementById("wordsTable");
-        var row = table.insertRow(-1);
+        table.innerHTML = "";
+        
         for (let i = 0; i < result.length; i++) {
-           var cell = row.insertCell(-1);
-           cell.innerHTML = word[i];
-           cell.className = "cell";
-           cell.classList.add( "cell"+ result[i])
+            var row = table.insertRow(-1);
+            word = result[i].wordtest;
+            compare = result[i].compare;
+            for (let j = 0; j < word.length; j++) {
+               var cell = row.insertCell(-1);
+               cell.innerHTML = word[j];
+               cell.className = "cell";
+               cell.classList.add( "cell"+compare[j])
+            }
         }
     }
 

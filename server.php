@@ -1,4 +1,5 @@
 <?php
+session_start();
 
 header("Content-Type:application/json");
 $request = json_decode(file_get_contents('php://input'));
@@ -27,11 +28,26 @@ if($request->route == "api/addword")
 	response(200,"todo ok", $result);
 }
 
+if($request->route == "api/gettestwords")
+{
+	$result = getTestWords();
+	response(200,"todo ok", $result);
+}
+
 
 function login($userid)
 {
+	$result = dbSelectQuery("select * from users where id=".$userid);
+	if(count($result) == 0)
+	{
+		$result['state'] = false;
+		return $result;
+	}
+
+	$_SESSION["userid"] = $userid;
 	$result['state'] = true;
 	$result['userid'] = $userid;
+	$result['name'] = $result[0]->name;
 	//$result['message'] = $message;
 	return $result;
 }
@@ -51,63 +67,105 @@ function testWord($testWord)
 	}
 	else
 	{
-		for ($i = 0; $i < $len; $i++) 
-		{
-			if($testWord[$i] == $realWord[$i])
-			{
-	    		$text = $text."1";
-			}
-	    	else
-	    	{
-	    		if (strpos($realWord, $testWord[$i]) !== false)
-	    			$text = $text."2";
-	    		else
-	    			$text= $text."0";
-	    	}
-		}
-		$message = " la palabra es ".$realWord;
+		//$text= getCompareWords($testWord,$realWord )
+
 		if($testWord == $realWord)
 		{
 			$state = true;
 			$message = "Encontraste la palabra!";
 		}
+
+		addWordTest($testWord);
 	}
 
-	$result['text'] = $text;
 	$result['state'] = $state;
 	$result['message'] = $message;
 	return $result;
 }
 
+function getCompareWords($testWord,$realWord)
+{
+	$len = strlen($realWord);
+	$text ="";
+
+	for ($i = 0; $i < $len; $i++) 
+	{
+		if($testWord[$i] == $realWord[$i])
+		{
+    		$text = $text."1";
+		}
+    	else
+    	{
+    		if (strpos($realWord, $testWord[$i]) !== false)
+    			$text = $text."2";
+    		else
+    			$text= $text."0";
+    	}
+	}
+
+	return $text;
+}
+
+
+function getTestWords()
+{
+	$query = "select wordtest from wordtests where userid = '%d' and wordid = '%d' order by id";
+	$query = sprintf($query, $_SESSION["userid"],$_SESSION["wordid"]);
+	$qresult = dbSelectQuery($query);
+	
+	$realWord = getRealWord();
+
+	for ($i = 0; $i < count($qresult); $i++) 
+	{
+		$result[$i]['wordtest'] = $qresult[$i]->wordtest;
+		$result[$i]['compare'] = getCompareWords($qresult[$i]->wordtest,$realWord);
+		$result[$i]['realWord'] = $realWord;
+	}
+
+	return $result;
+}
+
 function getRealWord()
 {
-	$date= date('Y-m-d');
-	$result= dbSelectQuery("select word,DATE_FORMAT(date, '%Y-%m-%d') as date from words order by date DESC LIMIT 1");
-	$wordDate=$result[0]->date;
+	$date = date('Y-m-d');
+	$result = dbSelectQuery("select id,word,DATE_FORMAT(date, '%Y-%m-%d') as date from words order by date DESC LIMIT 1");
+	$wordDate = $result[0]->date;
    
-    if($wordDate!=$date)
+    if($wordDate != $date)
     {
     	$ch = curl_init('https://palabras-aleatorias-public-api.herokuapp.com/random-by-length?length=5');
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		$json = curl_exec($ch);
 		curl_close($ch);
-		$data=  json_decode($json);
-		$word= $data->body->Word;
+		$data =  json_decode($json);
+		$word = $data->body->Word;
 		addWord($word);
+		return getRealWord();
     }
     else{
     	$word = $result[0]->word;
+    	$_SESSION["wordid"] = $result[0]->id;
     }
 
-  return $word;
+  return strtoupper($word);
 }
-
 
 function addWord($word)
 {
 	$date= date('Y-m-d');
 	$query = "INSERT INTO `words` ( `word`, `date`) VALUES ('%s','".$date."')";
 	$query = sprintf($query, $word);
+	$res = dbExecuteQuery($query);
+
+	$result['state'] = $res;
+	//$result['message'] = $res;
+	return $result;
+}
+
+function addWordTest($word)
+{
+	$query = "INSERT INTO `wordtests` ( `wordtest`, `userid`, `wordid`) VALUES ('%s','%d','%d')";
+	$query = sprintf($query, $word,$_SESSION["userid"],$_SESSION["wordid"]);
 	$res = dbExecuteQuery($query);
 
 	$result['state'] = $res;
