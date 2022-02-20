@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>wordle Admin</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+  <div class="container">
+    <h2>wordle Admin</h2>
+  </div>
+    <div class="container" id="login">
+          <form class="form-inline" action="" method="POST">
+            <div class="form-group" id="input">
+              <label for="userid" >User Id</label>
+              <input type="text" name="userid" id="userid" class="form-control" placeholder="Ingresa userId" required />
+              <label for="name" >Nombre</label>
+              <input type="text" name="name" id="name" class="form-control" placeholder="Ingresa nombre" required />
+              <label for="mail" >Mail</label>
+              <input type="text" name="mail" id="mail" class="form-control" placeholder="Ingresa mail" required />
+              <button onclick="addUser()" type="button" class="btn btn-default" >Enviar</button>
+            </div>
+         </form>
+    </div>
+ <div class="container">
+    <label id="resultLabel"></label> 
+ </div>
+
+</body>
+
+<style type="text/css">
+    div{
+        justify-content: center;
+        align-items: center;
+    }
+
+    table {
+        font-size: 2.1rem;
+        border-spacing: 2px;
+        border-collapse: separate;
+        text-transform: uppercase;
+        font-family: ui-sans-serif,system-ui;
+    }
+
+    td { 
+        padding: 5px;
+    }
+
+    .cell {
+        border: 2px solid black;
+        width: 50px;
+        height: 50px;
+        text-align: center;
+        color: white;
+        font-style: bold;
+    }
+    .cell0 {
+        background-color: grey;
+    }
+    .cell1 {
+        background-color: green;
+    }
+    .cell2 {
+        background-color: yellow;
+    }
+</style>
+
+<script>
+    const server = 'http://localhost/wordle/server.php';
+    
+    function addUser(){
+        var userid = document.getElementById("userid").value;
+        var name = document.getElementById("name").value;
+        var mail = document.getElementById("mail").value;
+        const data = {
+            'route' : 'api/adduser',
+            'userid': userid,
+            'name': name,
+            'mail': mail
+        };
+
+       post(server,data).then((result)=>{
+            if(result.data.state == true)
+                document.getElementById("resultLabel").innerHTML = "Usuario creado";
+            else
+                document.getElementById("resultLabel").innerHTML = "Error";
+
+        });
+    }
+
+    function post(url,data) {
+        const request = new XMLHttpRequest()
+        request.responseType = 'json';
+        return new Promise((resolve, reject) => {
+            request.open('POST', url);
+            request.setRequestHeader('Content-Type', 'application/json');
+            request.onload = () => {
+                if (request.status >= 200 && request.status < 300) {
+                    resolve(request.response)
+                } else {
+                    reject(request.statusText)
+                }
+            }
+            request.onerror = () => reject(request.statusText)
+            request.send(JSON.stringify(data));
+        })
+    }
+ 
+    </script>
+
+</html>
