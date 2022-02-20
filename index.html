@@ -31,8 +31,44 @@
 </div>
 </body>
 
+<style type="text/css">
+    div{
+        justify-content: center;
+        align-items: center;
+    }
 
-  <script>
+    table {
+        font-size: 2.1rem;
+        border-spacing: 2px;
+        border-collapse: separate;
+        text-transform: uppercase;
+        font-family: ui-sans-serif,system-ui;
+    }
+
+    td { 
+        padding: 5px;
+    }
+
+    .cell {
+        border: 2px solid black;
+        width: 50px;
+        height: 50px;
+        text-align: center;
+        color: white;
+        font-style: bold;
+    }
+    .cell0 {
+        background-color: grey;
+    }
+    .cell1 {
+        background-color: green;
+    }
+    .cell2 {
+        background-color: yellow;
+    }
+</style>
+
+<script>
 
     const server = 'http://localhost/wordle/server.php';
 
@@ -48,22 +84,26 @@
        post(server,data).then((result)=>{
         
             var resultLabel = document.getElementById("resultLabel");
-            //insertRow(result.data);
-            console.log(result.data.text);
-           // if(result.data.state == false)
-            resultLabel.innerHTML = result.data.text;
+            fillTable(word,result.data.text);
+            //console.log(result.data.text);
+            //if(result.data.state == false)
+            resultLabel.innerHTML = result.data.message;
         });
     }
 
 
-    function insertRow(data)
+    function fillTable(word,result)
     {
         var table = document.getElementById("wordsTable");
         var row = table.insertRow(-1);
 
-        for (let i = 0; i < data.length; i++) {
-           var cell1 = row.insertCell(-1);
-           cell1.innerHTML = data[i];;
+        for (let i = 0; i < result.length; i++) {
+           var cell = row.insertCell(-1);
+           cell.innerHTML = word[i];
+           cell.className = "cell";
+           cell.classList.add( "cell"+ result[i])
+           
+
         }
     }
 
@@ -85,7 +125,6 @@
             request.send(JSON.stringify(data));
         })
     }
-
  
     </script>
 

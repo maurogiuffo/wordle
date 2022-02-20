@@ -5,7 +5,7 @@ $request = json_decode(file_get_contents('php://input'));
 if($request->route == "api/testword")
 {
 	$result = testWord($request->word);
-	response(200,"todo ok",$result);
+	response(200,"todo ok", $result);
 }
 
 function testWord($testWord)
@@ -15,10 +15,11 @@ function testWord($testWord)
 	$len = strlen($realWord);
 	$text = "";
 	$state = false; 
-	
+	$message = "";
+
 	if(strlen($testWord) != $len)
 	{
-		$text = 'La palabra debe tener '.$len.' letras';
+		$message = 'La palabra debe tener '.$len.' letras';
 	}
 	else
 	{
@@ -43,6 +44,7 @@ function testWord($testWord)
 
 	$result['text'] = $text;
 	$result['state'] = $state;
+	$result['message'] = $message;
 	return $result;
 }
 
