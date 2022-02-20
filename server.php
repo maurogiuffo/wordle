@@ -1,4 +1,5 @@
 <?php
+
 header("Content-Type:application/json");
 $request = json_decode(file_get_contents('php://input'));
 
@@ -20,6 +21,13 @@ if($request->route == "api/adduser")
 	response(200,"todo ok", $result);
 }
 
+if($request->route == "api/addword")
+{
+	$result = addWord($request->word);
+	response(200,"todo ok", $result);
+}
+
+
 function login($userid)
 {
 	$result['state'] = true;
@@ -31,7 +39,7 @@ function login($userid)
 function testWord($testWord)
 {
 	$testWord = strtoupper($testWord);
-	$realWord = getRealWord();
+	$realWord = strtoupper(getRealWord());
 	$len = strlen($realWord);
 	$text = "";
 	$state = false; 
@@ -57,7 +65,7 @@ function testWord($testWord)
 	    			$text= $text."0";
 	    	}
 		}
-
+		$message = " la palabra es ".$realWord;
 		if($testWord == $realWord)
 		{
 			$state = true;
@@ -73,23 +81,51 @@ function testWord($testWord)
 
 function getRealWord()
 {
-	return strtoupper("movil");
+	$date= date('Y-m-d');
+	$result= dbSelectQuery("select word,DATE_FORMAT(date, '%Y-%m-%d') as date from words order by date DESC LIMIT 1");
+	$wordDate=$result[0]->date;
+   
+    if($wordDate!=$date)
+    {
+    	$ch = curl_init('https://palabras-aleatorias-public-api.herokuapp.com/random-by-length?length=5');
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		$json = curl_exec($ch);
+		curl_close($ch);
+		$data=  json_decode($json);
+		$word= $data->body->Word;
+		addWord($word);
+    }
+    else{
+    	$word = $result[0]->word;
+    }
+
+  return $word;
 }
 
+
+function addWord($word)
+{
+	$date= date('Y-m-d');
+	$query = "INSERT INTO `words` ( `word`, `date`) VALUES ('%s','".$date."')";
+	$query = sprintf($query, $word);
+	$res = dbExecuteQuery($query);
+
+	$result['state'] = $res;
+	//$result['message'] = $res;
+	return $result;
+}
 
 function addUser($userid,$name,$mail)
 {
 	$query = "INSERT INTO `users` (`id`, `name`, `mail`) VALUES ('%d', '%s', '%s')";
 	$query = sprintf($query, $userid,$name,$mail);
-	$res = dbquery($query);
+	$res = dbExecuteQuery($query);
 
 	$result['state'] = $res;
 	//$result['message'] = $res;
 	return $result;
 
 }
-
-
 
 function response($status,$status_message,$data)
 {
@@ -103,7 +139,8 @@ function response($status,$status_message,$data)
 	echo $json_response;
 }
 
-function dbquery($sql){
+
+function dbExecuteQuery($sql){
 	$host="localhost";        # host name or ip address
 	$user="root";            # database user name
 	$pass="";    # database password
@@ -117,16 +154,29 @@ function dbquery($sql){
 	return $result;
 }
 
-/*
-//"SELECT id, firstname, lastname FROM MyGuests";
-if ($result->num_rows > 0) {
-	  // output data of each row
-	  while($row = $result->fetch_assoc()) {
-	    echo "id: " . $row["id"]. " - Name: " . $row["firstname"]. " " . $row["lastname"]. "<br>";
-	  }
-	} else {
-	  echo "0 results";
+
+function dbSelectQuery($sql){
+	$host="localhost";        # host name or ip address
+	$user="root";            # database user name
+	$pass="";    # database password
+	$database="wordle";        # dateabase name with which you want to connect
+	$conn = new mysqli($host, $user, $pass, $database);
+	if ($conn->connect_error) {
+	  die("Connection failed: " . $conn->connect_error);
+	}
+	
+	$result = $conn->query($sql);
+
+	if(mysqli_num_rows($result)>0){
+	     // Cycle through results
+	    while ($row = $result->fetch_object()){
+	        $user_arr[] = $row;
+	    }
+	    // Free result set
+	    $result->close();
+	    $conn->next_result();
 	}
 
-*/
-
+	$conn->close();
+	return $user_arr;
+}

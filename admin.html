@@ -13,7 +13,7 @@
   <div class="container">
     <h2>wordle Admin</h2>
   </div>
-    <div class="container" id="login">
+    <div class="container" id="users">
           <form class="form-inline" action="" method="POST">
             <div class="form-group" id="input">
               <label for="userid" >User Id</label>
@@ -26,6 +26,18 @@
             </div>
          </form>
     </div>
+
+    <div class="container" id="words">
+          <form class="form-inline" action="" method="POST">
+            <div class="form-group" id="input">
+              <label for="word" >Palabra</label>
+              <input type="text" name="word" id="word" class="form-control" placeholder="Ingresa palabra" required />
+              <button onclick="addWord()" type="button" class="btn btn-default" >Enviar</button>
+            </div>
+         </form>
+    </div>
+
+
  <div class="container">
     <label id="resultLabel"></label> 
  </div>
@@ -71,7 +83,15 @@
 
 <script>
     const server = 'http://localhost/wordle/server.php';
-    
+    window.addEventListener('load', (event) => {
+        fetch('https://palabras-aleatorias-public-api.herokuapp.com/random-by-length?length=5')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("word").value = data.body.Word;
+            console.log(data.body.Word)
+        });
+    });
+
     function addUser(){
         var userid = document.getElementById("userid").value;
         var name = document.getElementById("name").value;
@@ -86,6 +106,23 @@
        post(server,data).then((result)=>{
             if(result.data.state == true)
                 document.getElementById("resultLabel").innerHTML = "Usuario creado";
+            else
+                document.getElementById("resultLabel").innerHTML = "Error";
+
+        });
+    }
+
+
+    function addWord(){
+        var word = document.getElementById("word").value;
+        const data = {
+            'route' : 'api/addword',
+            'word': word
+        };
+
+       post(server,data).then((result)=>{
+            if(result.data.state == true)
+                document.getElementById("resultLabel").innerHTML = "Palabra creada";
             else
                 document.getElementById("resultLabel").innerHTML = "Error";
 
