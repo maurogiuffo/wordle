@@ -39,7 +39,10 @@ function testWord($testWord)
 		}
 
 		if($testWord == $realWord)
+		{
 			$state = true;
+			$message = "Encontraste la palabra!";
+		}
 	}
 
 	$result['text'] = $text;
