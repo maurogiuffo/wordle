@@ -41,7 +41,7 @@
 		var word = document.getElementById("word").value;
 
         const data = {
-            'type' : 'testword',
+            'route' : 'api/testword',
             'word': word
         };
 
@@ -50,7 +50,7 @@
             var resultLabel = document.getElementById("resultLabel");
             //insertRow(result.data);
             console.log(result.data.text);
-            if(result.data.state == false)
+           // if(result.data.state == false)
             resultLabel.innerHTML = result.data.text;
         });
     }

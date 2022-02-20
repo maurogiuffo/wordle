@@ -2,7 +2,7 @@
 header("Content-Type:application/json");
 $request = json_decode(file_get_contents('php://input'));
 
-if($request->type == "testword")
+if($request->route == "api/testword")
 {
 	$result = testWord($request->word);
 	response(200,"todo ok",$result);
