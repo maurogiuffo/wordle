@@ -90,7 +90,6 @@
          } 
     });
 
-
     function showLogin(){
         document.getElementById("play").style.visibility = "hidden"; 
     }
@@ -130,13 +129,16 @@
         };
 
        post(server,data).then((result)=>{
-            document.getElementById("wordText").value="";
-            document.getElementById("wordText").disabled = result.data.state == true;
-            document.getElementById("botonTest").disabled = result.data.state == true;
-            document.getElementById("resultLabel").innerHTML = result.data.message;
             loadTestWords();
         });
     }
+
+     function finishGame(message){
+        document.getElementById("wordText").value="";
+        document.getElementById("wordText").disabled = true;
+        document.getElementById("botonTest").disabled = true;
+        document.getElementById("resultLabel").innerHTML = "Encontraste la palabra!";
+     }
 
     function loadTestWords()
     {
@@ -144,9 +146,10 @@
             'route' : 'api/gettestwords'
         };
 
-  
        post(server,data).then((result)=>{
-            fillTable(result.data);
+            if(result.data.finished)
+                finishGame(result.data.message);
+            fillTable(result.data.testwords);
         });
     }
 
@@ -168,7 +171,6 @@
             }
         }
     }
-
 
     function validateWord()
         {

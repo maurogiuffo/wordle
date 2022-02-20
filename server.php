@@ -72,14 +72,12 @@ function testWord($testWord)
 		if($testWord == $realWord)
 		{
 			$state = true;
-			$message = "Encontraste la palabra!";
 		}
 
 		addWordTest($testWord);
 	}
 
 	$result['state'] = $state;
-	$result['message'] = $message;
 	return $result;
 }
 
@@ -114,14 +112,19 @@ function getTestWords()
 	$qresult = dbSelectQuery($query);
 	
 	$realWord = getRealWord();
-
+	$finished= false;
 	for ($i = 0; $i < count($qresult); $i++) 
 	{
-		$result[$i]['wordtest'] = $qresult[$i]->wordtest;
-		$result[$i]['compare'] = getCompareWords($qresult[$i]->wordtest,$realWord);
-		$result[$i]['realWord'] = $realWord;
+		$list[$i]['wordtest'] = $qresult[$i]->wordtest;
+		$list[$i]['compare'] = getCompareWords($qresult[$i]->wordtest,$realWord);
+		$list[$i]['realWord'] = $realWord;
+
+		if($list[$i]['wordtest'] == $realWord)
+			$finished = true;
 	}
 
+	$result['testwords'] = $list;
+	$result['finished'] = $finished;
 	return $result;
 }
 
@@ -167,7 +170,6 @@ function addWordTest($word)
 	$query = "INSERT INTO `wordtests` ( `wordtest`, `userid`, `wordid`) VALUES ('%s','%d','%d')";
 	$query = sprintf($query, $word,$_SESSION["userid"],$_SESSION["wordid"]);
 	$res = dbExecuteQuery($query);
-
 	$result['state'] = $res;
 	//$result['message'] = $res;
 	return $result;
@@ -178,9 +180,7 @@ function addUser($userid,$name,$mail)
 	$query = "INSERT INTO `users` (`id`, `name`, `mail`) VALUES ('%d', '%s', '%s')";
 	$query = sprintf($query, $userid,$name,$mail);
 	$res = dbExecuteQuery($query);
-
 	$result['state'] = $res;
-	//$result['message'] = $res;
 	return $result;
 
 }
