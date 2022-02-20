@@ -10,25 +10,35 @@
 </head>
 <body>
 
-<div class="container">
-  <h2>wordle</h2>
-  <form class="form-inline" action="" method="POST">
-    <div class="form-group" id="input">
-      <label for="word" >Palabra</label>
-      <input type="text" name="word" id="wordText" class="form-control" onblur="validateWord()" placeholder="Ingresa la palabra" required  onkeypress="return check(event)" />
-	  <button onclick="testWord()" type="button" class="btn btn-default" id="botonTest">Probar</button>
-    </div>
-	<div>
-        <table id="wordsTable"></table>
-	   <label id="resultLabel"></label>
-	</div>
-	  
-  </form>
-  <p>&nbsp;</p>
-  <h3>
 
-  </h3>
-</div>
+  <div class="container">
+    <h2>wordle</h2>
+  </div>
+    <div class="container" id="login">
+        <div class="form-group" id="input">
+          <label for="userid" >User Id</label>
+          <input type="text" name="userid" id="userid" class="form-control" placeholder="Ingresa userId" required />
+          <button onclick="login()" type="button" class="btn btn-default" id="botonTest">Enviar</button>
+        </div>
+    </div>
+
+    <div class="container" id="play">
+      <form class="form-inline" action="" method="POST">
+        <div class="form-group" id="input">
+          <label for="word" >Palabra</label>
+          <input type="text" name="word" id="wordText" class="form-control" onblur="validateWord()" placeholder="Ingresa la palabra" required  onkeypress="return validateChar(event)" />
+    	  <button onclick="testWord()" type="button" class="btn btn-default" id="botonTest">Probar</button>
+        </div>
+    	<div>
+            <table id="wordsTable"></table>
+    	</div>
+      </form>
+      <p>&nbsp;</p>
+      <label id="resultLabel"></label>
+      <h3>
+      </h3>
+    </div>
+
 </body>
 
 <style type="text/css">
@@ -69,12 +79,41 @@
 </style>
 
 <script>
-
     const server = 'http://localhost/wordle/server.php';
+    window.addEventListener('load', (event) => {
+         if(!localStorage.getItem('userId'))
+            showLogin();
+         else 
+            showPlay();
+    });
+
+    function showLogin(){
+        document.getElementById("play").style.visibility = "hidden"; 
+    }
+
+    function showPlay(){
+        document.getElementById("login").remove(); 
+        document.getElementById("play").style.visibility = "visible"; 
+    }
+
+    function login(){
+        var userid = document.getElementById("userid").value;
+        const data = {
+            'route' : 'api/login',
+            'userid': userid
+        };
+
+       post(server,data).then((result)=>{
+            if( result.data.state == true){
+                localStorage.setItem("userId",result.data.userid);
+                showPlay();
+            }
+        });
+    }
 
 	function testWord()
     {
-        if(validateWord()==false) return;
+        if(validateWord() == false) return;
 		var word = document.getElementById("wordText").value;
         const data = {
             'route' : 'api/testword',
@@ -116,7 +155,7 @@
         }
 
 
-   function  check(e) 
+   function validateChar(e) 
    {
         word = document.getElementById("wordText").value;
         if(word.length>4){
