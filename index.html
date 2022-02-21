@@ -12,6 +12,7 @@
 
 
   <div class="container">
+    <h4 id="username"></h4>
     <h2>wordle</h2>
   </div>
     <div class="container" id="login">
@@ -24,6 +25,11 @@
          </form>
     </div>
 
+    <div class="container">
+        <div>
+            <table id="wordsTable"></table>
+        </div>
+     </div>
     <div class="container" id="play">
       <form class="form-inline" action="" method="POST">
         <div class="form-group" id="input">
@@ -31,9 +37,7 @@
           <input type="text" name="word" id="wordText" class="form-control" onblur="validateWord()" placeholder="Ingresa la palabra" required  onkeypress="return validateChar(event)" />
     	  <button onclick="testWord()" type="button" class="btn btn-default" id="botonTest">Probar</button>
         </div>
-    	<div>
-            <table id="wordsTable"></table>
-    	</div>
+    	
       </form>
       <p>&nbsp;</p>
       <label id="resultLabel"></label>
@@ -76,12 +80,21 @@
         background-color: green;
     }
     .cell2 {
-        background-color: yellow;
+        background-color: darkgoldenrod;
     }
 </style>
 
 <script>
-    const server = 'http://localhost/wordle/server.php';
+
+    var testWords;
+
+    if(window.location.hostname == "localhost")
+        server = 'http://localhost/wordle/server.php';
+    else
+        server = 'https://worlde.000webhostapp.com/server.php';
+        
+    document.getElementById("login").style.visibility = "hidden"; 
+
     window.addEventListener('load', (event) => {
          if(!localStorage.getItem('userId'))
             showLogin();
@@ -91,6 +104,7 @@
     });
 
     function showLogin(){
+         document.getElementById("login").style.visibility = "visible"; 
         document.getElementById("play").style.visibility = "hidden"; 
     }
 
@@ -113,6 +127,7 @@
        post(server,data).then((result)=>{
             if(result.data.state == true){
                 localStorage.setItem("userId",result.data.userid);
+                document.getElementById("username").innerHTML =" Bienvenido "+ result.data.name; 
                 showPlay();
                 loadTestWords();
             }
@@ -122,6 +137,7 @@
 	function testWord()
     {
         if(validateWord() == false) return;
+
 		var word = document.getElementById("wordText").value;
         const data = {
             'route' : 'api/testword',
@@ -146,7 +162,9 @@
             'route' : 'api/gettestwords'
         };
 
+        document.getElementById("resultLabel").innerHTML = "";
        post(server,data).then((result)=>{
+            testWords = result.data.testwords;
             if(result.data.finished)
                 finishGame(result.data.message);
             fillTable(result.data.testwords);
@@ -174,12 +192,19 @@
 
     function validateWord()
         {
-            word = document.getElementById("wordText").value;
+            word = document.getElementById("wordText").value.toUpperCase();
             if(word.length!=5)
             {
                 document.getElementById("resultLabel").innerHTML ="La palabra debe tener 5 letras";
                 return false;
             }
+
+            for(i=0;i< testWords.length;i++)
+                if(testWords[i].wordtest == word )
+                {
+                    document.getElementById("resultLabel").innerHTML = "Ya probaste esa palabra!";
+                    return false;
+                }
             return true;
         }
 
@@ -207,7 +232,7 @@
         request.responseType = 'json';
         return new Promise((resolve, reject) => {
             request.open('POST', url);
-            request.setRequestHeader('Content-Type', 'application/json');
+            request.setRequestHeader('Content-Type', 'application/json','Access-Control-Allow-Origin: *');
             request.onload = () => {
                 if (request.status >= 200 && request.status < 300) {
                     resolve(request.response)

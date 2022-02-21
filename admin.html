@@ -16,13 +16,30 @@
     <div class="container" id="users">
           <form class="form-inline" action="" method="POST">
             <div class="form-group" id="input">
-              <label for="userid" >User Id</label>
-              <input type="text" name="userid" id="userid" class="form-control" placeholder="Ingresa userId" required />
-              <label for="name" >Nombre</label>
-              <input type="text" name="name" id="name" class="form-control" placeholder="Ingresa nombre" required />
-              <label for="mail" >Mail</label>
-              <input type="text" name="mail" id="mail" class="form-control" placeholder="Ingresa mail" required />
-              <button onclick="addUser()" type="button" class="btn btn-default" >Enviar</button>
+                <div  class="form-group">
+                     <label for="pass" >Password</label>
+                    <input type="text" name="pass" id="pass" class="form-control" placeholder="Ingresa passs" required />
+                </div>
+                 
+                  <div  class="form-group">
+                    <label for="userid" >User Id</label>
+                    <input type="text" name="userid" id="userid" class="form-control" placeholder="Ingresa userId" required />                  
+                  </div>
+                  <div  class="form-group">
+                  
+                  </div>
+                    <label for="name" >Nombre</label>
+                      <input type="text" name="name" id="name" class="form-control" placeholder="Ingresa nombre" required />
+
+                  <div  class="form-group">
+                      <label for="mail" >Mail</label>
+                      <input type="text" name="mail" id="mail" class="form-control" placeholder="Ingresa mail" required />
+                  </div>
+                  <div  class="form-group">
+                    <button onclick="addUser()" type="button" class="btn btn-default" >Enviar</button>
+                  </div>
+                  
+                
             </div>
          </form>
     </div>
@@ -36,12 +53,9 @@
             </div>
          </form>
     </div>
-
-
  <div class="container">
     <label id="resultLabel"></label> 
  </div>
-
 </body>
 
 <style type="text/css">
@@ -82,7 +96,11 @@
 </style>
 
 <script>
-    const server = 'http://localhost/wordle/server.php';
+   if(window.location.hostname == "localhost")
+        server = 'http://localhost/wordle/server.php';
+    else
+        server = 'https://worlde.000webhostapp.com/server.php';
+
     window.addEventListener('load', (event) => {
         fetch('https://palabras-aleatorias-public-api.herokuapp.com/random-by-length?length=5')
         .then(response => response.json())
@@ -96,11 +114,13 @@
         var userid = document.getElementById("userid").value;
         var name = document.getElementById("name").value;
         var mail = document.getElementById("mail").value;
+        var pass = document.getElementById("pass").value;
         const data = {
             'route' : 'api/adduser',
             'userid': userid,
             'name': name,
-            'mail': mail
+            'mail': mail,
+            'pass': pass
         };
 
        post(server,data).then((result)=>{
@@ -134,7 +154,7 @@
         request.responseType = 'json';
         return new Promise((resolve, reject) => {
             request.open('POST', url);
-            request.setRequestHeader('Content-Type', 'application/json');
+            request.setRequestHeader('Content-Type', 'application/json','Access-Control-Allow-Origin: *');
             request.onload = () => {
                 if (request.status >= 200 && request.status < 300) {
                     resolve(request.response)

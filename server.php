@@ -1,7 +1,13 @@
 <?php
+
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST');
+header("Access-Control-Allow-Headers: X-Requested-With");
+header("Content-Type:application/json");
+
+include 'vars.php';
 session_start();
 
-header("Content-Type:application/json");
 $request = json_decode(file_get_contents('php://input'));
 
 if($request->route == "api/testword")
@@ -18,7 +24,7 @@ if($request->route == "api/login")
 
 if($request->route == "api/adduser")
 {
-	$result = addUser($request->userid,$request->name,$request->mail);
+	$result = addUser($request->userid,$request->name,$request->mail,$request->pass);
 	response(200,"todo ok", $result);
 }
 
@@ -117,8 +123,7 @@ function getTestWords()
 	{
 		$list[$i]['wordtest'] = $qresult[$i]->wordtest;
 		$list[$i]['compare'] = getCompareWords($qresult[$i]->wordtest,$realWord);
-		$list[$i]['realWord'] = $realWord;
-
+		
 		if($list[$i]['wordtest'] == $realWord)
 			$finished = true;
 	}
@@ -175,8 +180,14 @@ function addWordTest($word)
 	return $result;
 }
 
-function addUser($userid,$name,$mail)
+function addUser($userid,$name,$mail,$pass)
 {
+	if($pass != ADMIN_PASS)
+	{
+		$result['state'] = false;
+		return $result;
+	}
+
 	$query = "INSERT INTO `users` (`id`, `name`, `mail`) VALUES ('%d', '%s', '%s')";
 	$query = sprintf($query, $userid,$name,$mail);
 	$res = dbExecuteQuery($query);
@@ -199,11 +210,7 @@ function response($status,$status_message,$data)
 
 
 function dbExecuteQuery($sql){
-	$host="localhost";        # host name or ip address
-	$user="root";            # database user name
-	$pass="";    # database password
-	$database="wordle";        # dateabase name with which you want to connect
-	$conn = new mysqli($host, $user, $pass, $database);
+	$conn = new mysqli(HOST, BD_USER, BD_PASS, BD_DATABASE);
 	if ($conn->connect_error) {
 	  die("Connection failed: " . $conn->connect_error);
 	}
@@ -214,11 +221,7 @@ function dbExecuteQuery($sql){
 
 
 function dbSelectQuery($sql){
-	$host="localhost";        # host name or ip address
-	$user="root";            # database user name
-	$pass="";    # database password
-	$database="wordle";        # dateabase name with which you want to connect
-	$conn = new mysqli($host, $user, $pass, $database);
+	$conn = new mysqli(HOST, BD_USER, BD_PASS, BD_DATABASE);
 	if ($conn->connect_error) {
 	  die("Connection failed: " . $conn->connect_error);
 	}
