@@ -41,20 +41,21 @@ if($request->route == "api/gettestwords")
 }
 
 
+
 function login($userid)
 {
-	$result = dbSelectQuery("select * from users where id=".$userid);
-	if(count($result) == 0)
+	$qresult = dbSelectQuery("select * from users where id=".$userid);
+	if($qresult['count'] == 0)
 	{
 		$result['state'] = false;
 		return $result;
 	}
+	
 
 	$_SESSION["userid"] = $userid;
 	$result['state'] = true;
 	$result['userid'] = $userid;
-	$result['name'] = $result[0]->name;
-	//$result['message'] = $message;
+	$result['name'] = $qresult['data'][0]->name;
 	return $result;
 }
 
@@ -73,14 +74,13 @@ function testWord($testWord)
 	}
 	else
 	{
-		//$text= getCompareWords($testWord,$realWord )
+		addWordTest($testWord);
 
 		if($testWord == $realWord)
 		{
 			$state = true;
-		}
-
-		addWordTest($testWord);
+			//addLeaderbordEntry();
+		}	
 	}
 
 	$result['state'] = $state;
@@ -119,10 +119,10 @@ function getTestWords()
 	
 	$realWord = getRealWord();
 	$finished= false;
-	for ($i = 0; $i < count($qresult); $i++) 
+	for ($i = 0; $i <$qresult['count']; $i++) 
 	{
-		$list[$i]['wordtest'] = $qresult[$i]->wordtest;
-		$list[$i]['compare'] = getCompareWords($qresult[$i]->wordtest,$realWord);
+		$list[$i]['wordtest'] = $qresult['data'][$i]->wordtest;
+		$list[$i]['compare'] = getCompareWords($qresult['data'][$i]->wordtest,$realWord);
 		
 		if($list[$i]['wordtest'] == $realWord)
 			$finished = true;
@@ -136,10 +136,9 @@ function getTestWords()
 function getRealWord()
 {
 	$date = date('Y-m-d');
-	$result = dbSelectQuery("select id,word,DATE_FORMAT(date, '%Y-%m-%d') as date from words order by date DESC LIMIT 1");
-	$wordDate = $result[0]->date;
-   
-    if($wordDate != $date)
+	$qresult = dbSelectQuery("select id,word,DATE_FORMAT(date, '%Y-%m-%d') as date from words order by date DESC LIMIT 1");
+	
+	if($qresult['count']==0 || $qresult['data'][0]->date != $date)
     {
     	$ch = curl_init('https://palabras-aleatorias-public-api.herokuapp.com/random-by-length?length=5');
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -151,8 +150,8 @@ function getRealWord()
 		return getRealWord();
     }
     else{
-    	$word = $result[0]->word;
-    	$_SESSION["wordid"] = $result[0]->id;
+    	$word = $qresult['data'][0]->word;
+    	$_SESSION["wordid"] = $qresult['data'][0]->id;
     }
 
   return strtoupper($word);
@@ -179,6 +178,31 @@ function addWordTest($word)
 	//$result['message'] = $res;
 	return $result;
 }
+
+function addLeaderbordEntry()
+{
+	/*
+	$wordTests = getTestWords()['testwords'];
+
+	$query = "INSERT INTO `leaderboard` ( `userid`, `wordid`, `tests`) VALUES ( '%d','%d','%d');";
+	$query = sprintf($query,$_SESSION["userid"],$_SESSION["wordid"],count($wordTests));
+	$res = dbExecuteQuery($query);
+	$result['state'] = $res;
+	//$result['message'] = $res;
+	return $result;*/
+}
+
+function getLeaderbord()
+{
+/*
+	$query = "INSERT INTO `leaderboard` ( `userid`, `wordid`, `tests`) VALUES ( '%d','%d','%d');";
+	$query = sprintf($query,$_SESSION["userid"],$_SESSION["wordid"],count($wordTests));
+	$res = dbExecuteQuery($query);
+	$result['state'] = $res;
+	//$result['message'] = $res;
+	return $result;*/
+}
+
 
 function addUser($userid,$name,$mail,$pass)
 {
@@ -226,18 +250,23 @@ function dbSelectQuery($sql){
 	  die("Connection failed: " . $conn->connect_error);
 	}
 	
-	$result = $conn->query($sql);
-
-	if(mysqli_num_rows($result)>0){
+	$qresult = $conn->query($sql);
+	$count = mysqli_num_rows($qresult);
+	$data = null;
+	if($count>0){
 	     // Cycle through results
-	    while ($row = $result->fetch_object()){
-	        $user_arr[] = $row;
+	    while ($row = $qresult->fetch_object()){
+	        $data[] = $row;
 	    }
 	    // Free result set
-	    $result->close();
+	    $qresult->close();
 	    $conn->next_result();
 	}
-
+	
 	$conn->close();
-	return $user_arr;
+
+	$result['count'] = $count;
+	$result['data'] = $data;
+
+	return $result;
 }
